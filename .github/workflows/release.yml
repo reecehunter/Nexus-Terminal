@@ -1,0 +1,91 @@
+name: Build signed macOS release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+  build:
+    needs: verify
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64-apple-darwin, x86_64-apple-darwin]
+    env:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: npm ci
+      - name: Prepare notarization credentials and verify tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import { writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          import { releaseVersion } from './scripts/release-preflight.mjs';
+          const version = await releaseVersion();
+          if (process.env.GITHUB_REF_NAME !== `v${version}`) throw new Error('Release tag must match the application version.');
+          if (!process.env.APPLE_API_KEY_CONTENT) throw new Error('Missing APPLE_API_KEY_CONTENT secret.');
+          const keyPath = join(process.env.RUNNER_TEMP, 'nexus-notarization.p8');
+          writeFileSync(keyPath, process.env.APPLE_API_KEY_CONTENT, { mode: 0o600 });
+          writeFileSync(process.env.GITHUB_ENV, `APPLE_API_KEY_PATH=${keyPath}\n`, { flag: 'a' });
+          JS
+      - run: node scripts/release-preflight.mjs --ci
+      - uses: tauri-apps/tauri-action@v1
+        with:
+          args: --target ${{ matrix.target }} --bundles app,dmg
+      - name: Verify signatures, notarization, and architecture
+        run: node scripts/package-release.mjs '${{ matrix.target }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nexus-${{ matrix.target }}
+          path: release/**/*
+          if-no-files-found: error
+      - name: Remove notarization key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/nexus-notarization.p8"
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: nexus-*
+          path: release
+          merge-multiple: true
+      - name: Create a draft with verified downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' assets < <(find release -type f -print0)
+          if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft > draft-status.txt 2>/dev/null; then
+            test "$(cat draft-status.txt)" = true || { echo 'Refusing to modify a published release.' >&2; exit 1; }
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --draft --title "Nexus $RELEASE_TAG" --notes 'Download the DMG for Apple Silicon or Intel, open it, and drag Nexus to Applications. SHA256 checksums are included. Existing users: quit Nexus before replacing the app; settings and local transcripts are retained. Requires macOS 12 or later.'
+          fi

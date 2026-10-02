@@ -1,0 +1,179 @@
+{
+  "actions": [
+    {
+      "id": "new-tab",
+      "title": "New Tab",
+      "group": "Tabs",
+      "binding": "Cmd+KeyT"
+    },
+    {
+      "id": "previous-tab",
+      "title": "Previous Tab",
+      "group": "Tabs",
+      "binding": null
+    },
+    {
+      "id": "next-tab",
+      "title": "Next Tab",
+      "group": "Tabs",
+      "binding": null
+    },
+    {
+      "id": "select-tab-1",
+      "title": "Select Tab 1",
+      "group": "Tabs",
+      "binding": "Cmd+Digit1"
+    },
+    {
+      "id": "select-tab-2",
+      "title": "Select Tab 2",
+      "group": "Tabs",
+      "binding": "Cmd+Digit2"
+    },
+    {
+      "id": "select-tab-3",
+      "title": "Select Tab 3",
+      "group": "Tabs",
+      "binding": "Cmd+Digit3"
+    },
+    {
+      "id": "select-tab-4",
+      "title": "Select Tab 4",
+      "group": "Tabs",
+      "binding": "Cmd+Digit4"
+    },
+    {
+      "id": "select-tab-5",
+      "title": "Select Tab 5",
+      "group": "Tabs",
+      "binding": "Cmd+Digit5"
+    },
+    {
+      "id": "select-tab-6",
+      "title": "Select Tab 6",
+      "group": "Tabs",
+      "binding": "Cmd+Digit6"
+    },
+    {
+      "id": "select-tab-7",
+      "title": "Select Tab 7",
+      "group": "Tabs",
+      "binding": "Cmd+Digit7"
+    },
+    {
+      "id": "select-tab-8",
+      "title": "Select Tab 8",
+      "group": "Tabs",
+      "binding": "Cmd+Digit8"
+    },
+    {
+      "id": "select-tab-9",
+      "title": "Select Tab 9",
+      "group": "Tabs",
+      "binding": "Cmd+Digit9"
+    },
+    {
+      "id": "split-right",
+      "title": "Split Right",
+      "group": "Panes",
+      "binding": "Cmd+KeyD"
+    },
+    {
+      "id": "split-down",
+      "title": "Split Down",
+      "group": "Panes",
+      "binding": "Cmd+Shift+KeyD"
+    },
+    {
+      "id": "close-pane",
+      "title": "Close Session",
+      "group": "Panes",
+      "binding": "Cmd+KeyW"
+    },
+    {
+      "id": "previous-pane",
+      "title": "Previous Pane",
+      "group": "Panes",
+      "binding": "Cmd+Alt+BracketLeft"
+    },
+    {
+      "id": "next-pane",
+      "title": "Next Pane",
+      "group": "Panes",
+      "binding": "Cmd+Alt+BracketRight"
+    },
+    {
+      "id": "cycle-panes",
+      "title": "Cycle Panes",
+      "group": "Panes",
+      "binding": "Cmd+Alt+Slash"
+    },
+    {
+      "id": "focus-pane-left",
+      "title": "Focus Pane Left",
+      "group": "Panes",
+      "binding": "Cmd+Alt+ArrowLeft"
+    },
+    {
+      "id": "focus-pane-right",
+      "title": "Focus Pane Right",
+      "group": "Panes",
+      "binding": "Cmd+Alt+ArrowRight"
+    },
+    {
+      "id": "focus-pane-up",
+      "title": "Focus Pane Up",
+      "group": "Panes",
+      "binding": "Cmd+Alt+ArrowUp"
+    },
+    {
+      "id": "focus-pane-down",
+      "title": "Focus Pane Down",
+      "group": "Panes",
+      "binding": "Cmd+Alt+ArrowDown"
+    },
+    {
+      "id": "toggle-assistant",
+      "title": "Toggle Assistant",
+      "group": "App",
+      "binding": "Cmd+KeyJ"
+    },
+    {
+      "id": "open-settings",
+      "title": "Settings",
+      "group": "App",
+      "binding": "Cmd+Comma"
+    },
+    {
+      "id": "new-window",
+      "title": "New Window",
+      "group": "App",
+      "binding": "Cmd+KeyN"
+    },
+    {
+      "id": "close-window",
+      "title": "Close Window",
+      "group": "App",
+      "binding": "Cmd+Shift+KeyW"
+    }
+  ],
+  "reserved": [
+    "Cmd+KeyQ",
+    "Cmd+KeyH",
+    "Cmd+Alt+KeyH",
+    "Cmd+KeyM",
+    "Cmd+Alt+KeyM",
+    "Cmd+KeyC",
+    "Cmd+KeyV",
+    "Cmd+KeyX",
+    "Cmd+KeyA",
+    "Cmd+KeyZ",
+    "Cmd+Shift+KeyZ",
+    "Cmd+Ctrl+KeyF",
+    "Cmd+Space",
+    "Ctrl+Space",
+    "Cmd+Tab",
+    "Cmd+Shift+Tab",
+    "Cmd+Shift+Slash"
+  ]
+}
