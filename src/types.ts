@@ -19,6 +19,7 @@ export interface ContextSnapshot {
 export interface Settings {
   model: string;
   hasApiKey: boolean;
+  showStatusBar?: boolean;
   hotkeys?: import('./hotkeys').Hotkeys;
   reasoningEffort?: ReasoningEffort;
   connectionVerified?: boolean;

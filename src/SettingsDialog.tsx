@@ -31,6 +31,7 @@ export function SettingsDialog({
   const [redactSensitiveInfo, setRedactSensitiveInfo] = useState(
     settings.redactSensitiveInfo ?? true,
   );
+  const [showStatusBar, setShowStatusBar] = useState(settings.showStatusBar ?? true);
   const [models, setModels] = useState<ModelOption[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -77,6 +78,7 @@ export function SettingsDialog({
         effort,
         testConnection,
         redactSensitiveInfo,
+        showStatusBar,
       );
       onSave(next);
       setApiKey('');
@@ -86,7 +88,8 @@ export function SettingsDialog({
         apiKey ||
         model !== settings.model ||
         effort !== (settings.reasoningEffort ?? 'medium') ||
-        redactSensitiveInfo !== (settings.redactSensitiveInfo ?? true)
+        redactSensitiveInfo !== (settings.redactSensitiveInfo ?? true) ||
+        showStatusBar !== (settings.showStatusBar ?? true)
       ) {
         setConnected(true);
       } else onClose();
@@ -276,6 +279,25 @@ export function SettingsDialog({
             <strong>Automatically redact sensitive information</strong>
             <small>
               Removes detected credentials and common personal identifiers before sending.
+            </small>
+          </span>
+        </label>
+        <label className="privacy-toggle" htmlFor="show-status-bar">
+          <input
+            id="show-status-bar"
+            aria-label="Show compact status bar"
+            type="checkbox"
+            checked={showStatusBar}
+            disabled={saving}
+            onChange={(event) => {
+              setShowStatusBar(event.target.checked);
+              setConnected(false);
+            }}
+          />
+          <span>
+            <strong>Show compact status bar</strong>
+            <small>
+              Displays the Nexus version and current directory at the bottom of each terminal.
             </small>
           </span>
         </label>

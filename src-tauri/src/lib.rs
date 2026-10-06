@@ -288,6 +288,7 @@ async fn settings_save(
     reasoning_effort: chat::ReasoningEffort,
     test_connection: bool,
     redact_sensitive_info: Option<bool>,
+    show_status_bar: Option<bool>,
     window: WebviewWindow,
     state: State<'_, AppState>,
 ) -> Result<settings::SettingsView, String> {
@@ -344,6 +345,7 @@ async fn settings_save(
         accepted_effort,
         verified,
         redact_sensitive_info.unwrap_or(current.redact_sensitive_info),
+        show_status_bar.unwrap_or(current.show_status_bar),
     ) {
         Ok(view) => view,
         Err(error) => {

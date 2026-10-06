@@ -21,6 +21,7 @@ interface Props {
   macroTipsVisible: boolean;
   closing: boolean;
   hotkeys: Hotkeys;
+  showStatusBar: boolean;
   onClosePane(): void;
   onSessionChange(paneId: string, session: TerminalInfo | null): void;
   onManualInput(sessionId: string, reason: 'typed' | 'interrupt'): void | Promise<void>;
@@ -36,6 +37,7 @@ export const TabWorkspace = forwardRef<WorkspaceHandle, Props>(function TabWorks
     macroTipsVisible,
     closing,
     hotkeys,
+    showStatusBar,
     onClosePane,
     onSessionChange,
     onManualInput,
@@ -64,17 +66,8 @@ export const TabWorkspace = forwardRef<WorkspaceHandle, Props>(function TabWorks
   const closeBinding = hotkeys['close-pane'] ?? defaultHotkeys()['close-pane'];
   return (
     <div className="app-shell tab-workspace" hidden={!visible}>
-      <header className="app-header">
-        <div className="app-brand">
-          <TerminalSquare size={17} />
-          <span>{paneTitle ?? 'Nexus'}</span>
-          <span className="app-version">0.1</span>
-        </div>
-        <div className="workspace-label">
-          <FolderOpen size={13} />
-          <span>{session?.home ?? 'Local shell'}</span>
-        </div>
-        {paneTitle && (
+      {paneTitle && (
+        <header className="app-header app-header-actions">
           <button
             className="icon-button"
             aria-label={`Close ${paneTitle}`}
@@ -87,8 +80,8 @@ export const TabWorkspace = forwardRef<WorkspaceHandle, Props>(function TabWorks
               <MacroTip>{formatHotkey(closeBinding).replace(/^⌘/, '⌘+')}</MacroTip>
             )}
           </button>
-        )}
-      </header>
+        </header>
+      )}
       <main className="workspace">
         <TerminalView
           ref={terminal}
@@ -112,6 +105,19 @@ export const TabWorkspace = forwardRef<WorkspaceHandle, Props>(function TabWorks
             <X size={15} />
           </button>
         </div>
+      )}
+      {showStatusBar && (
+        <footer className="app-status" aria-label="Nexus status">
+          <div className="app-status-identity">
+            <TerminalSquare size={11} />
+            <span>Nexus</span>
+            <span className="app-version">0.1</span>
+          </div>
+          <div className="app-status-directory">
+            <FolderOpen size={11} />
+            <span title={session?.home ?? 'Local shell'}>{session?.home ?? 'Local shell'}</span>
+          </div>
+        </footer>
       )}
     </div>
   );

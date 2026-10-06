@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { RotateCcw, TerminalSquare, Square } from 'lucide-react';
+import { RotateCcw, TerminalSquare } from 'lucide-react';
 import { terminalSnapshot } from './terminal-snapshot';
 import { bridge, desktopAvailable, errorMessage } from './bridge';
 import { boundedTerminalText } from './chat-state';
@@ -241,24 +241,6 @@ export const TerminalView = forwardRef<TerminalHandle, Props>(function TerminalV
   return (
     <section className="terminal-pane" aria-label="Terminal">
       <div className="terminal-container" ref={container} />
-      {desktopAvailable() && exited === null && (
-        <button
-          className="terminal-interrupt icon-button"
-          aria-label="Interrupt terminal"
-          title="Interrupt terminal (Ctrl+C)"
-          onClick={() => {
-            const sessionId = sessionRef.current;
-            if (!sessionId) return;
-            callbacks.current.onManualInput(sessionId, 'interrupt');
-            void bridge
-              .interruptTerminal(sessionId)
-              .then(() => publishRef.current?.())
-              .catch((error) => callbacks.current.onError(errorMessage(error)));
-          }}
-        >
-          <Square size={12} />
-        </button>
-      )}
       {!desktopAvailable() && (
         <div className="terminal-placeholder">
           <TerminalSquare size={32} strokeWidth={1.3} />

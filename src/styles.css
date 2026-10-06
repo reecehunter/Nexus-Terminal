@@ -88,6 +88,12 @@ kbd {
   border-bottom: 1px solid var(--theme-border);
   user-select: none;
 }
+.app-header-actions {
+  justify-content: flex-end;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+}
 .app-brand,
 .header-actions,
 .workspace-label,
@@ -1042,13 +1048,13 @@ kbd {
   background: var(--theme-green);
 }
 .app-status {
-  height: 26px;
-  min-height: 26px;
+  height: 22px;
+  min-height: 22px;
   border-top: 1px solid var(--theme-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 10px;
   color: var(--theme-muted);
   font:
     9px 'SFMono-Regular',
@@ -1058,7 +1064,22 @@ kbd {
   user-select: none;
 }
 .app-status > div {
-  gap: 7px;
+  gap: 5px;
+}
+.app-status-identity {
+  font-weight: 600;
+}
+.app-status .app-version {
+  margin-left: 1px;
+}
+.app-status-directory {
+  min-width: 0;
+  max-width: 65%;
+}
+.app-status-directory span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .status-divider {
   display: inline-block;
@@ -1341,17 +1362,6 @@ kbd {
 .tool-target {
   padding: 8px 0;
   font-size: 12px;
-}
-.terminal-interrupt {
-  position: absolute;
-  right: 10px;
-  top: 8px;
-  z-index: 2;
-  opacity: 0.65;
-  background: var(--theme-surface);
-}
-.terminal-interrupt:hover {
-  opacity: 1;
 }
 .tab-bar {
   display: flex;

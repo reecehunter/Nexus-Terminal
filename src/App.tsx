@@ -771,6 +771,7 @@ export default function App() {
               handles={handles.current}
               closing={closing}
               hotkeys={hotkeys}
+              showStatusBar={settings.showStatusBar ?? true}
               onSessionChange={onSessionChange}
               onManualInput={onManualInput}
               focusOnReady={!chatOpen && !settingsOpen && !confirmation}
@@ -1022,6 +1023,7 @@ interface SplitTabProps {
   closing: boolean;
   handles: Map<string, WorkspaceHandle>;
   hotkeys: import('./hotkeys').Hotkeys;
+  showStatusBar: boolean;
   onSessionChange(paneId: string, session: TerminalInfo | null): void;
   onManualInput(sessionId: string, reason: 'typed' | 'interrupt'): void | Promise<void>;
   focusOnReady: boolean;
@@ -1039,6 +1041,7 @@ function SplitTab({
   onClose,
   onResize,
   hotkeys,
+  showStatusBar,
   onSessionChange,
   onManualInput,
   focusOnReady,
@@ -1084,6 +1087,7 @@ function SplitTab({
               onClosePane={() => onClose(pane.id)}
               closing={closing}
               hotkeys={hotkeys}
+              showStatusBar={showStatusBar}
               onSessionChange={onSessionChange}
               onManualInput={onManualInput}
               focusOnReady={focusOnReady}

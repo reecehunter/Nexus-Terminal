@@ -171,7 +171,7 @@ describe('rendered terminal snapshots', () => {
       ),
     );
   });
-  it('notifies manual input before serializing keystrokes and uses explicit interrupt', async () => {
+  it('notifies manual input before serializing keystrokes', async () => {
     render(<TerminalView {...props} />);
     await waitFor(() => expect(props.onSession).toHaveBeenCalledOnce());
     act(() => {
@@ -185,9 +185,6 @@ describe('rendered terminal snapshots', () => {
       ['first-tab', 'λ'],
       ['first-tab', '\r'],
     ]);
-    fireEvent.click(screen.getByRole('button', { name: 'Interrupt terminal' }));
-    expect(props.onManualInput).toHaveBeenLastCalledWith('first-tab', 'interrupt');
-    expect(bridge.interruptTerminal).toHaveBeenCalledWith('first-tab');
   });
   it('settles an in-flight parser flush when its terminal unmounts', async () => {
     const ref = createRef<TerminalHandle>();

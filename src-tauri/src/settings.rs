@@ -14,6 +14,10 @@ fn default_redact_sensitive_info() -> bool {
     true
 }
 
+fn default_show_status_bar() -> bool {
+    true
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 struct Settings {
     model: String,
@@ -27,6 +31,8 @@ struct Settings {
     connection_verified: bool,
     #[serde(default = "default_redact_sensitive_info")]
     redact_sensitive_info: bool,
+    #[serde(default = "default_show_status_bar")]
+    show_status_bar: bool,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -37,6 +43,7 @@ impl Default for Settings {
             reasoning_effort: ReasoningEffort::Medium,
             connection_verified: false,
             redact_sensitive_info: true,
+            show_status_bar: true,
         }
     }
 }
@@ -50,6 +57,7 @@ pub struct SettingsView {
     pub reasoning_effort: ReasoningEffort,
     pub connection_verified: bool,
     pub redact_sensitive_info: bool,
+    pub show_status_bar: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -121,6 +129,7 @@ impl SettingsStore {
             reasoning_effort: settings.reasoning_effort,
             connection_verified: settings.connection_verified,
             redact_sensitive_info: settings.redact_sensitive_info,
+            show_status_bar: settings.show_status_bar,
 
             has_api_key: keychain_read()?.is_some(),
         })
@@ -142,6 +151,7 @@ impl SettingsStore {
         reasoning_effort: ReasoningEffort,
         connection_verified: bool,
         redact_sensitive_info: bool,
+        show_status_bar: bool,
     ) -> Result<SettingsView> {
         let _guard = self
             .lock
@@ -169,6 +179,7 @@ impl SettingsStore {
                 reasoning_effort,
                 connection_verified,
                 redact_sensitive_info,
+                show_status_bar,
             })?,
         )?;
         fs::rename(temporary, self.directory.join("settings.json"))?;
@@ -178,6 +189,7 @@ impl SettingsStore {
             reasoning_effort,
             connection_verified,
             redact_sensitive_info,
+            show_status_bar,
 
             has_api_key: keychain_read()?.is_some(),
         })
@@ -230,6 +242,7 @@ impl SettingsStore {
             reasoning_effort: settings.reasoning_effort,
             connection_verified: settings.connection_verified,
             redact_sensitive_info: settings.redact_sensitive_info,
+            show_status_bar: settings.show_status_bar,
 
             has_api_key: keychain_read()?.is_some(),
         })
@@ -248,6 +261,7 @@ impl SettingsStore {
             reasoning_effort: settings.reasoning_effort,
             connection_verified: false,
             redact_sensitive_info: settings.redact_sensitive_info,
+            show_status_bar: settings.show_status_bar,
 
             has_api_key: false,
         })
@@ -301,6 +315,7 @@ mod tests {
         assert!(!settings.connection_verified);
         assert_eq!(settings.reasoning_effort, ReasoningEffort::Medium);
         assert!(settings.redact_sensitive_info);
+        assert!(settings.show_status_bar);
     }
     #[test]
     fn retires_old_defaults_without_overwriting_custom_bindings() {

@@ -51,6 +51,7 @@ export const bridge = {
     reasoningEffort: import('./types').ReasoningEffort = 'medium',
     testConnection = false,
     redactSensitiveInfo = true,
+    showStatusBar = true,
   ) =>
     invoke<Settings>('settings_save', {
       model,
@@ -59,6 +60,7 @@ export const bridge = {
       reasoningEffort,
       testConnection,
       redactSensitiveInfo,
+      showStatusBar,
     }),
   setHotkeysEditing: (editing: boolean) =>
     desktopAvailable() ? invoke<void>('hotkeys_editing', { editing }) : Promise.resolve(),
