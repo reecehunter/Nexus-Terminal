@@ -15,7 +15,7 @@ vi.mock('./bridge', () => ({
 afterEach(cleanup);
 beforeEach(() => vi.clearAllMocks());
 const settings = { model: 'test', hasApiKey: false, redactSensitiveInfo: true };
-it('records, clears and saves shortcuts, restoring native shortcuts on dismissal', async () => {
+it('records and automatically saves shortcuts, restoring native shortcuts on dismissal', async () => {
   const onClose = vi.fn();
   const onSave = vi.fn();
   const view = render(<SettingsDialog settings={settings} onClose={onClose} onSave={onSave} />);
@@ -26,8 +26,7 @@ it('records, clears and saves shortcuts, restoring native shortcuts on dismissal
   fireEvent.keyDown(record, { key: 'l', code: 'KeyL', ctrlKey: true });
   expect(record.textContent).toBe('⌃L');
   fireEvent.click(screen.getByRole('button', { name: 'Clear shortcut for Previous Pane' }));
-  await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save settings' })));
-  expect(bridge.saveSettings).toHaveBeenCalledWith(
+  await waitFor(() => expect(bridge.saveSettings).toHaveBeenCalledWith(
     'test',
     null,
     {
@@ -41,8 +40,9 @@ it('records, clears and saves shortcuts, restoring native shortcuts on dismissal
     true,
     null,
     null,
-  );
-  expect(onClose).toHaveBeenCalledOnce();
+  ));
+  expect(screen.queryByRole('button', { name: 'Save settings' })).toBeNull();
+  expect(onClose).not.toHaveBeenCalled();
   expect(onSave).toHaveBeenCalledOnce();
   view.unmount();
   expect(bridge.setHotkeysEditing).toHaveBeenLastCalledWith(false);
@@ -64,12 +64,12 @@ it('rejects conflicting and reserved shortcuts, supports Escape and reset', asyn
   fireEvent.click(screen.getByRole('button', { name: 'Reset defaults' }));
   expect(record.textContent).toBe('⌘⌥]');
 });
-it('keeps settings open and shows save errors', async () => {
+it('keeps settings open and shows automatic save errors', async () => {
   vi.mocked(bridge.saveSettings).mockRejectedValueOnce(new Error('Cannot save'));
   const onClose = vi.fn();
   render(<SettingsDialog settings={settings} onClose={onClose} onSave={vi.fn()} />);
-  await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save settings' })));
-  expect(screen.getByRole('alert').textContent).toContain('Cannot save');
+  fireEvent.click(screen.getByLabelText('Automatically redact sensitive information'));
+  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Cannot save'));
   expect(onClose).not.toHaveBeenCalled();
 });
 
@@ -122,8 +122,7 @@ it('loads account-visible models using the unsaved key and shows automatic reaso
 it('allows automatic redaction to be disabled and persists the choice', async () => {
   render(<SettingsDialog settings={settings} onClose={vi.fn()} onSave={vi.fn()} />);
   fireEvent.click(screen.getByLabelText('Automatically redact sensitive information'));
-  await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save settings' })));
-  expect(bridge.saveSettings).toHaveBeenCalledWith(
+  await waitFor(() => expect(bridge.saveSettings).toHaveBeenCalledWith(
     'test',
     null,
     defaultHotkeys(),
@@ -133,7 +132,7 @@ it('allows automatic redaction to be disabled and persists the choice', async ()
     true,
     null,
     null,
-  );
+  ));
 });
 it('preserves the draft key and settings after rejected connection validation', async () => {
   vi.mocked(bridge.saveSettings).mockRejectedValueOnce(

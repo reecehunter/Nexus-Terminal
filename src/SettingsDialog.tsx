@@ -37,6 +37,7 @@ export function SettingsDialog({
   const [models, setModels] = useState<ModelOption[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [connected, setConnected] = useState(false);
+  const lastSavedDraft = useRef<string | null>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const previousFocus = useRef(document.activeElement as HTMLElement | null);
   useEffect(() => {
@@ -67,6 +68,16 @@ export function SettingsDialog({
       setLoadingModels(false);
     }
   }
+  const draftKey = JSON.stringify({
+    model,
+    hotkeys,
+    effort,
+    redactSensitiveInfo,
+    showStatusBar,
+    spoofUserHost: spoofUserHost.trim(),
+    spoofSshUserHost: spoofSshUserHost.trim(),
+  });
+
   async function save(testConnection = false) {
     setSaving(true);
     setError('');
@@ -75,7 +86,8 @@ export function SettingsDialog({
       if (validationError) throw new Error(validationError);
       const next = await bridge.saveSettings(
         model,
-        apiKey || null,
+        // A key is persisted only through the explicit connection test.
+        testConnection ? apiKey || null : null,
         hotkeys,
         effort,
         testConnection,
@@ -85,26 +97,33 @@ export function SettingsDialog({
         spoofSshUserHost.trim() || null,
       );
       onSave(next);
+      lastSavedDraft.current = draftKey;
       setApiKey('');
       setEffort(next.reasoningEffort ?? effort);
-      if (
-        testConnection ||
-        apiKey ||
-        model !== settings.model ||
-        effort !== (settings.reasoningEffort ?? 'medium') ||
-        redactSensitiveInfo !== (settings.redactSensitiveInfo ?? true) ||
-        showStatusBar !== (settings.showStatusBar ?? true) ||
-        spoofUserHost.trim() !== (settings.spoofUserHost ?? '') ||
-        spoofSshUserHost.trim() !== (settings.spoofSshUserHost ?? '')
-      ) {
+      if (testConnection) {
         setConnected(true);
-      } else onClose();
+      }
     } catch (error) {
       setError(errorMessage(error));
     } finally {
       setSaving(false);
     }
   }
+
+  // Debounce ordinary preference changes so typing and shortcut edits do not
+  // issue a backend request for every intermediate value.
+  useEffect(() => {
+    if (lastSavedDraft.current === null) {
+      lastSavedDraft.current = draftKey;
+      return;
+    }
+    if (lastSavedDraft.current === draftKey) return;
+
+    const timeout = window.setTimeout(() => {
+      void save(false);
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [draftKey]);
 
   return (
     <main className="settings-page" aria-labelledby="settings-title">
@@ -420,13 +439,6 @@ export function SettingsDialog({
               Remove key
             </button>
           )}
-          <button
-            className="primary-button"
-            onClick={() => save()}
-            disabled={saving || loadingModels || !!recording}
-          >
-            {saving ? 'Saving…' : 'Save settings'}
-          </button>
         </div>
       </div>
     </main>
