@@ -8,6 +8,11 @@ function _nexus_color_prompt() {
       local username='%F{252}%n%f' hostname='%F{253}%m%f'
       local short_directory='%F{254}%1~%f' directory='%F{254}%~%f'
       local symbol='%F{255}%#%f'
+      if [[ -n "$NEXUS_SPOOF_USER_HOST" ]]; then
+        # Settings validation limits this to literal hostname-safe characters.
+        username="%F{252}${NEXUS_SPOOF_USER_HOST%@*}%f"
+        hostname="%F{253}${NEXUS_SPOOF_USER_HOST#*@}%f"
+      fi
       PROMPT="${PROMPT//'%n'/$username}"
       PROMPT="${PROMPT//'%m'/$hostname}"
       PROMPT="${PROMPT//'%1~'/$short_directory}"

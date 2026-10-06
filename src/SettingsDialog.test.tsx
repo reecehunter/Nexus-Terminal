@@ -39,6 +39,7 @@ it('records, clears and saves shortcuts, restoring native shortcuts on dismissal
     false,
     true,
     true,
+    null,
   );
   expect(onClose).toHaveBeenCalledOnce();
   expect(onSave).toHaveBeenCalledOnce();
@@ -104,6 +105,7 @@ it('loads account-visible models using the unsaved key and shows automatic reaso
     true,
     true,
     true,
+    null,
   );
   expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ connectionVerified: true }));
   expect(onClose).not.toHaveBeenCalled();
@@ -127,6 +129,7 @@ it('allows automatic redaction to be disabled and persists the choice', async ()
     false,
     false,
     true,
+    null,
   );
 });
 it('preserves the draft key and settings after rejected connection validation', async () => {

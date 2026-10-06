@@ -198,13 +198,22 @@ pub struct TerminalSession {
 
 impl TerminalSession {
     pub fn start(output: Channel<TerminalEvent>, directory: Option<PathBuf>) -> Result<Arc<Self>> {
+        Self::start_with_prompt_identity(output, directory, None)
+    }
+
+    pub fn start_with_prompt_identity(
+        output: Channel<TerminalEvent>,
+        directory: Option<PathBuf>,
+        prompt_identity: Option<String>,
+    ) -> Result<Arc<Self>> {
         let home = std::env::var_os("HOME")
             .map(PathBuf::from)
             .context("Home directory is unavailable")?;
-        Self::start_at(
+        Self::start_at_with_prompt_identity(
             output,
             directory.filter(|path| path.is_dir()).unwrap_or(home),
             true,
+            prompt_identity,
         )
     }
 
@@ -212,6 +221,15 @@ impl TerminalSession {
         output: Channel<TerminalEvent>,
         home: PathBuf,
         login: bool,
+    ) -> Result<Arc<Self>> {
+        Self::start_at_with_prompt_identity(output, home, login, None)
+    }
+
+    pub(crate) fn start_at_with_prompt_identity(
+        output: Channel<TerminalEvent>,
+        home: PathBuf,
+        login: bool,
+        prompt_identity: Option<String>,
     ) -> Result<Arc<Self>> {
         let pair = native_pty_system().openpty(PtySize {
             rows: 24,
@@ -233,6 +251,7 @@ impl TerminalSession {
         let shell_integration = if login {
             Some(crate::shell_integration::ShellIntegration::prepare(
                 &mut command,
+                prompt_identity.as_deref(),
             )?)
         } else {
             None

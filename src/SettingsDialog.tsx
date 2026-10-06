@@ -32,6 +32,7 @@ export function SettingsDialog({
     settings.redactSensitiveInfo ?? true,
   );
   const [showStatusBar, setShowStatusBar] = useState(settings.showStatusBar ?? true);
+  const [spoofUserHost, setSpoofUserHost] = useState(settings.spoofUserHost ?? '');
   const [models, setModels] = useState<ModelOption[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -79,6 +80,7 @@ export function SettingsDialog({
         testConnection,
         redactSensitiveInfo,
         showStatusBar,
+        spoofUserHost.trim() || null,
       );
       onSave(next);
       setApiKey('');
@@ -89,7 +91,8 @@ export function SettingsDialog({
         model !== settings.model ||
         effort !== (settings.reasoningEffort ?? 'medium') ||
         redactSensitiveInfo !== (settings.redactSensitiveInfo ?? true) ||
-        showStatusBar !== (settings.showStatusBar ?? true)
+        showStatusBar !== (settings.showStatusBar ?? true) ||
+        spoofUserHost.trim() !== (settings.spoofUserHost ?? '')
       ) {
         setConnected(true);
       } else onClose();
@@ -301,6 +304,24 @@ export function SettingsDialog({
             </small>
           </span>
         </label>
+        <label htmlFor="spoof-user-host">Spoof prompt user@host</label>
+        <input
+          id="spoof-user-host"
+          type="text"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Leave blank to use your real identity"
+          value={spoofUserHost}
+          disabled={saving}
+          onChange={(event) => {
+            setSpoofUserHost(event.target.value);
+            setConnected(false);
+          }}
+        />
+        <p className="field-help">
+          Shows a safe, literal identity in new terminal prompts. Use letters, numbers, dots,
+          underscores, or hyphens on each side of @.
+        </p>
         <ThemeEditor />
         <section className="hotkey-settings" aria-label="Keyboard shortcuts">
           <div className="hotkey-heading">

@@ -52,6 +52,7 @@ export const bridge = {
     testConnection = false,
     redactSensitiveInfo = true,
     showStatusBar = true,
+    spoofUserHost: string | null = null,
   ) =>
     invoke<Settings>('settings_save', {
       model,
@@ -61,6 +62,7 @@ export const bridge = {
       testConnection,
       redactSensitiveInfo,
       showStatusBar,
+      spoofUserHost,
     }),
   setHotkeysEditing: (editing: boolean) =>
     desktopAvailable() ? invoke<void>('hotkeys_editing', { editing }) : Promise.resolve(),

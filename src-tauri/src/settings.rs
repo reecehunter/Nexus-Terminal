@@ -18,6 +18,29 @@ fn default_show_status_bar() -> bool {
     true
 }
 
+fn validate_spoof_user_host(value: Option<String>) -> Result<Option<String>> {
+    let Some(value) = value
+        .map(|value| value.trim().to_owned())
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(None);
+    };
+    let mut parts = value.split('@');
+    let user = parts.next().unwrap_or_default();
+    let host = parts.next().unwrap_or_default();
+    let valid_part = |part: &str| {
+        !part.is_empty()
+            && part.len() <= 127
+            && part
+                .chars()
+                .all(|character| character.is_ascii_alphanumeric() || "._-".contains(character))
+    };
+    if parts.next().is_some() || !valid_part(user) || !valid_part(host) {
+        bail!("Prompt user@host must contain one @ and only letters, numbers, dots, underscores, or hyphens");
+    }
+    Ok(Some(value))
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 struct Settings {
     model: String,
@@ -33,6 +56,8 @@ struct Settings {
     redact_sensitive_info: bool,
     #[serde(default = "default_show_status_bar")]
     show_status_bar: bool,
+    #[serde(default)]
+    spoof_user_host: Option<String>,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -44,6 +69,7 @@ impl Default for Settings {
             connection_verified: false,
             redact_sensitive_info: true,
             show_status_bar: true,
+            spoof_user_host: None,
         }
     }
 }
@@ -58,6 +84,7 @@ pub struct SettingsView {
     pub connection_verified: bool,
     pub redact_sensitive_info: bool,
     pub show_status_bar: bool,
+    pub spoof_user_host: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -131,6 +158,8 @@ impl SettingsStore {
             redact_sensitive_info: settings.redact_sensitive_info,
             show_status_bar: settings.show_status_bar,
 
+            spoof_user_host: settings.spoof_user_host,
+
             has_api_key: keychain_read()?.is_some(),
         })
     }
@@ -143,6 +172,14 @@ impl SettingsStore {
         Ok(self.load()?.hotkeys)
     }
 
+    pub fn prompt_identity(&self) -> Result<Option<String>> {
+        let _guard = self
+            .lock
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Settings unavailable"))?;
+        Ok(self.load()?.spoof_user_host)
+    }
+
     pub fn save(
         &self,
         model: String,
@@ -152,6 +189,7 @@ impl SettingsStore {
         connection_verified: bool,
         redact_sensitive_info: bool,
         show_status_bar: bool,
+        spoof_user_host: Option<String>,
     ) -> Result<SettingsView> {
         let _guard = self
             .lock
@@ -162,6 +200,7 @@ impl SettingsStore {
         if model.is_empty() || model.len() > 120 || model.chars().any(char::is_whitespace) {
             bail!("Enter a valid model ID");
         }
+        let spoof_user_host = validate_spoof_user_host(spoof_user_host)?;
         if let Some(api_key) = api_key.filter(|key| !key.trim().is_empty()) {
             if api_key.len() > 1024 || api_key.chars().any(char::is_whitespace) {
                 bail!("API key must not contain whitespace");
@@ -180,6 +219,7 @@ impl SettingsStore {
                 connection_verified,
                 redact_sensitive_info,
                 show_status_bar,
+                spoof_user_host: spoof_user_host.clone(),
             })?,
         )?;
         fs::rename(temporary, self.directory.join("settings.json"))?;
@@ -190,6 +230,7 @@ impl SettingsStore {
             connection_verified,
             redact_sensitive_info,
             show_status_bar,
+            spoof_user_host,
 
             has_api_key: keychain_read()?.is_some(),
         })
@@ -244,6 +285,8 @@ impl SettingsStore {
             redact_sensitive_info: settings.redact_sensitive_info,
             show_status_bar: settings.show_status_bar,
 
+            spoof_user_host: settings.spoof_user_host,
+
             has_api_key: keychain_read()?.is_some(),
         })
     }
@@ -262,6 +305,8 @@ impl SettingsStore {
             connection_verified: false,
             redact_sensitive_info: settings.redact_sensitive_info,
             show_status_bar: settings.show_status_bar,
+
+            spoof_user_host: settings.spoof_user_host,
 
             has_api_key: false,
         })

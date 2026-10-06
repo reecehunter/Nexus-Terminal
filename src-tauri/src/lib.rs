@@ -49,8 +49,13 @@ fn terminal_start(
         previous.stop();
         registry.chat(window.label())?.cancel_session(&previous_id);
     }
+    let prompt_identity = state
+        .settings
+        .prompt_identity()
+        .map_err(|error| error.to_string())?;
     let session =
-        terminal::TerminalSession::start(output, directory).map_err(|error| error.to_string())?;
+        terminal::TerminalSession::start_with_prompt_identity(output, directory, prompt_identity)
+            .map_err(|error| error.to_string())?;
     let info = session.info();
     registry.open(window.label(), &tab_id)?.terminal = Some(session);
     Ok(info)
@@ -289,6 +294,7 @@ async fn settings_save(
     test_connection: bool,
     redact_sensitive_info: Option<bool>,
     show_status_bar: Option<bool>,
+    spoof_user_host: Option<String>,
     window: WebviewWindow,
     state: State<'_, AppState>,
 ) -> Result<settings::SettingsView, String> {
@@ -346,6 +352,7 @@ async fn settings_save(
         verified,
         redact_sensitive_info.unwrap_or(current.redact_sensitive_info),
         show_status_bar.unwrap_or(current.show_status_bar),
+        spoof_user_host,
     ) {
         Ok(view) => view,
         Err(error) => {

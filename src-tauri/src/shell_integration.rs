@@ -6,7 +6,7 @@ use uuid::Uuid;
 /// A private startup directory installs hooks without editing the user's dotfiles.
 pub struct ShellIntegration(PathBuf);
 impl ShellIntegration {
-    pub fn prepare(command: &mut CommandBuilder) -> Result<Self> {
+    pub fn prepare(command: &mut CommandBuilder, prompt_identity: Option<&str>) -> Result<Self> {
         let directory = std::env::temp_dir().join(format!("nexus-shell-{}", Uuid::new_v4()));
         fs::create_dir(&directory).context("Could not create shell integration directory")?;
         let integration = Self(directory);
@@ -53,7 +53,7 @@ ZDOTDIR="$NEXUS_USER_ZDOTDIR"
 [[ -r "$ZDOTDIR/.zshrc" ]] && builtin source "$ZDOTDIR/.zshrc"
 builtin source "$NEXUS_BOOTSTRAP_DIR/highlight.zsh"
 builtin source "$NEXUS_BOOTSTRAP_DIR/prompt.zsh"
-unset NEXUS_USER_ZDOTDIR NEXUS_HAD_ZDOTDIR NEXUS_BOOTSTRAP_DIR
+unset NEXUS_USER_ZDOTDIR NEXUS_HAD_ZDOTDIR NEXUS_BOOTSTRAP_DIR NEXUS_SPOOF_USER_HOST
 "#,
         )?;
         let original = std::env::var_os("ZDOTDIR");
@@ -63,6 +63,9 @@ unset NEXUS_USER_ZDOTDIR NEXUS_HAD_ZDOTDIR NEXUS_BOOTSTRAP_DIR
         );
         command.env("NEXUS_USER_ZDOTDIR", original.unwrap_or_default());
         command.env("NEXUS_BOOTSTRAP_DIR", &integration.0);
+        if let Some(prompt_identity) = prompt_identity {
+            command.env("NEXUS_SPOOF_USER_HOST", prompt_identity);
+        }
         command.env("ZDOTDIR", &integration.0);
         Ok(integration)
     }
