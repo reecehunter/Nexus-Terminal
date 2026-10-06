@@ -363,6 +363,45 @@ export const themePresets: Theme[] = [
   }),
 ];
 const storageKey = 'nexus.theme.v1';
+const customThemesStorageKey = 'nexus.custom-themes.v1';
+
+export function loadCustomThemes(): Theme[] {
+  try {
+    const saved = localStorage.getItem(customThemesStorageKey);
+    if (!saved) return [];
+    const values: unknown = JSON.parse(saved);
+    if (!Array.isArray(values)) return [];
+    return values.flatMap((value) => {
+      try {
+        return [parseTheme(value)];
+      } catch {
+        return [];
+      }
+    });
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomTheme(theme: Theme): Theme[] {
+  const next = parseTheme(theme);
+  const themes = loadCustomThemes();
+  const existingIndex = themes.findIndex((saved) => saved.name === next.name);
+  if (existingIndex === -1 && themePresets.some((preset) => preset.name === next.name)) {
+    throw new Error('Choose a different name before saving a built-in theme as custom.');
+  }
+  if (existingIndex === -1) themes.push(next);
+  else themes[existingIndex] = next;
+  localStorage.setItem(customThemesStorageKey, JSON.stringify(themes));
+  return themes;
+}
+
+export function deleteCustomTheme(name: string): Theme[] {
+  const themes = loadCustomThemes().filter((theme) => theme.name !== name);
+  localStorage.setItem(customThemesStorageKey, JSON.stringify(themes));
+  return themes;
+}
+
 export function parseTheme(value: unknown): Theme {
   if (!value || typeof value !== 'object') throw new Error('Theme must be a JSON object.');
   const theme = value as Theme;

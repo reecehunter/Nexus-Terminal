@@ -1,6 +1,15 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { defaultTheme, parseTheme, terminalTheme, themePresets, ThemeProvider } from './theme';
+import {
+  defaultTheme,
+  deleteCustomTheme,
+  loadCustomThemes,
+  parseTheme,
+  saveCustomTheme,
+  terminalTheme,
+  themePresets,
+  ThemeProvider,
+} from './theme';
 import { ThemeEditor } from './ThemeEditor';
 
 beforeEach(() => localStorage.clear());
@@ -119,4 +128,62 @@ it('updates the prompt palette from the appearance controls', () => {
   expect(document.documentElement.style.getPropertyValue('--theme-promptUser')).toBe('#ff8800');
   const saved = parseTheme(JSON.parse(localStorage.getItem('nexus.theme.v1')!));
   expect(terminalTheme(saved).extendedAnsi[236]).toBe('#ff8800');
+});
+
+it('saves, replaces, reloads, and deletes custom themes', () => {
+  const saved = saveCustomTheme({ ...defaultTheme, name: 'My Theme' });
+  expect(saved.map((theme) => theme.name)).toContain('My Theme');
+  expect(loadCustomThemes()).toEqual(saved);
+
+  const updated = saveCustomTheme({
+    ...defaultTheme,
+    name: 'My Theme',
+    colors: { ...defaultTheme.colors, accent: '#123456' },
+  });
+  expect(updated.filter((theme) => theme.name === 'My Theme')).toHaveLength(1);
+  expect(loadCustomThemes().find((theme) => theme.name === 'My Theme')?.colors.accent).toBe(
+    '#123456',
+  );
+
+  expect(deleteCustomTheme('My Theme')).toEqual([]);
+  expect(loadCustomThemes()).toEqual([]);
+});
+
+it('does not allow custom saves to overwrite built-in theme names', () => {
+  expect(() => saveCustomTheme(defaultTheme)).toThrow(
+    'Choose a different name before saving a built-in theme as custom.',
+  );
+  expect(loadCustomThemes()).toEqual([]);
+});
+
+it('shows custom themes and removes them from the picker', () => {
+  saveCustomTheme({ ...defaultTheme, name: 'Saved Theme' });
+  render(
+    <ThemeProvider>
+      <ThemeEditor />
+    </ThemeProvider>,
+  );
+
+  expect(screen.getByRole('button', { name: 'Apply custom theme Saved Theme' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Delete custom theme Saved Theme' }));
+  expect(screen.queryByRole('button', { name: 'Apply custom theme Saved Theme' })).toBeNull();
+});
+
+it('lets a selected theme name be edited without rejecting intermediate input', () => {
+  render(
+    <ThemeProvider>
+      <ThemeEditor />
+    </ThemeProvider>,
+  );
+  fireEvent.click(screen.getByRole('button', { name: /Aa Midnight/ }));
+  const nameInput = screen.getByLabelText('Theme name') as HTMLInputElement;
+
+  fireEvent.change(nameInput, { target: { value: '' } });
+  expect(nameInput.value).toBe('');
+  fireEvent.change(nameInput, { target: { value: 'Work Theme' } });
+  expect(nameInput.value).toBe('Work Theme');
+  fireEvent.blur(nameInput);
+
+  expect(nameInput.value).toBe('Work Theme');
+  expect(JSON.parse(localStorage.getItem('nexus.theme.v1')!).name).toBe('Work Theme');
 });

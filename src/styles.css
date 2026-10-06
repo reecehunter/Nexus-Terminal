@@ -1711,6 +1711,33 @@ kbd {
 .theme-preset[aria-pressed='true'] {
   border-color: var(--theme-accent);
 }
+.custom-theme-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.custom-theme-heading h4,
+.theme-settings > h4 {
+  margin: 0;
+}
+.custom-theme-preset {
+  padding: 0;
+  overflow: hidden;
+}
+.theme-preset-apply {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px 0 0 8px;
+}
+.custom-theme-preset > .quiet-button {
+  margin-right: 8px;
+  padding: 5px 7px;
+}
 .theme-swatch {
   border-radius: 5px;
   padding: 8px;

@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   colorLabels,
+  deleteCustomTheme,
   defaultTheme,
+  loadCustomThemes,
   parseTheme,
+  saveCustomTheme,
   themePresets,
   useTheme,
   type Theme,
@@ -11,8 +14,11 @@ import {
 
 export function ThemeEditor() {
   const { theme, updateTheme } = useTheme();
+  const [customThemes, setCustomThemes] = useState(loadCustomThemes);
   const [error, setError] = useState('');
   const [json, setJson] = useState('');
+  const [themeName, setThemeName] = useState(theme.name);
+  useEffect(() => setThemeName(theme.name), [theme.name]);
   function apply(next: Theme) {
     try {
       updateTheme(next);
@@ -20,6 +26,14 @@ export function ThemeEditor() {
     } catch (error) {
       setError(String(error));
     }
+  }
+  function commitThemeName() {
+    if (!themeName.trim()) {
+      setThemeName(theme.name);
+      setError('Theme name must be 1–80 characters.');
+      return;
+    }
+    apply({ ...theme, name: themeName });
   }
   return (
     <section className="theme-settings" aria-label="Appearance">
@@ -30,7 +44,8 @@ export function ThemeEditor() {
         </button>
       </div>
       <p className="field-help">Changes apply immediately and save automatically on this device.</p>
-      <div className="theme-presets">
+      <h4>Built-in</h4>
+      <div className="theme-presets" aria-label="Built-in themes">
         {themePresets.map((preset) => (
           <button
             key={preset.name}
@@ -48,13 +63,64 @@ export function ThemeEditor() {
           </button>
         ))}
       </div>
+      <div className="custom-theme-heading">
+        <h4>Custom</h4>
+        <button
+          className="quiet-button"
+          onClick={() => {
+            try {
+              setCustomThemes(saveCustomTheme(theme));
+              setError('');
+            } catch (error) {
+              setError(String(error));
+            }
+          }}
+        >
+          Save current theme
+        </button>
+      </div>
+      {customThemes.length > 0 ? (
+        <div className="theme-presets" aria-label="Custom themes">
+          {customThemes.map((preset) => (
+            <div className="theme-preset custom-theme-preset" key={preset.name}>
+              <button
+                className="theme-preset-apply"
+                onClick={() => apply(preset)}
+                aria-pressed={theme.name === preset.name}
+                aria-label={`Apply custom theme ${preset.name}`}
+              >
+                <span
+                  className="theme-swatch"
+                  style={{ background: preset.colors.background, color: preset.colors.accent }}
+                >
+                  Aa
+                </span>
+                {preset.name}
+              </button>
+              <button
+                className="quiet-button"
+                aria-label={`Delete custom theme ${preset.name}`}
+                onClick={() => setCustomThemes(deleteCustomTheme(preset.name))}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="field-help">Save your current settings here for quick access later.</p>
+      )}
       <div className="theme-fields">
         <label>
           Theme name
           <input
-            value={theme.name}
+            value={themeName}
             maxLength={80}
-            onChange={(event) => apply({ ...theme, name: event.target.value })}
+            onChange={(event) => setThemeName(event.target.value)}
+            onBlur={commitThemeName}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.currentTarget.blur();
+            }}
           />
         </label>
         <label>
