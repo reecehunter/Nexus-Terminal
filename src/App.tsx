@@ -838,6 +838,11 @@ export default function App() {
                 removeLocalDirectory();
                 void agent.newChat();
               }}
+              onLoadChat={(chat) => {
+                changeAttachments(null);
+                removeLocalDirectory();
+                void agent.restoreChat(chat);
+              }}
               onClose={closeChat}
               onSettings={openSettings}
             />

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { bridge, desktopAvailable, errorMessage } from './bridge';
 import { chatReducer, initialChat } from './chat-state';
+import type { SavedChat } from './chat-history';
 import type { AgentMode, ChatEvent, ReasoningEffort, TerminalAttachment } from './types';
 
 // Mounted once by App: terminal panes never own a conversation or permission mode.
@@ -18,6 +19,7 @@ export function useWindowAgent() {
   const configuration = useRef(Promise.resolve());
   const cancellation = useRef(Promise.resolve());
   const decoders = useRef(new Map<string, TextDecoder>());
+  const restoredHistory = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
 
   const stop = useCallback((reason?: string) => {
     ++generation.current;
@@ -119,9 +121,12 @@ export function useWindowAgent() {
           terminalText: null,
           attachments,
           reasoningEffort,
+          history: restoredHistory.current.length ? restoredHistory.current : undefined,
         },
         receive,
       );
+      // The backend now owns this context; only send the saved transcript once.
+      restoredHistory.current = [];
       return true;
     } catch (error) {
       if (submission !== generation.current) return false;
@@ -145,7 +150,37 @@ export function useWindowAgent() {
         await canceled;
         await bridge.clearChat();
         conversation.current = crypto.randomUUID();
+        restoredHistory.current = [];
         dispatch({ type: 'reset', conversationId: conversation.current });
+        setError('');
+      });
+    configuration.current = operation;
+    try {
+      await operation;
+    } catch (error) {
+      setError(errorMessage(error));
+    }
+  }
+
+  async function restoreChat(saved: SavedChat) {
+    const canceled = stop();
+    const operation = configuration.current
+      .catch(() => {})
+      .then(async () => {
+        await canceled;
+        await bridge.clearChat();
+        conversation.current = saved.conversationId;
+        restoredHistory.current = saved.items.flatMap((item) =>
+          item.kind === 'message' && item.text.trim().length > 0
+            ? [{ role: item.role, content: item.text }]
+            : [],
+        );
+        dispatch({
+          type: 'restore',
+          conversationId: saved.conversationId,
+          items: saved.items,
+          completedTurns: saved.completedTurns,
+        });
         setError('');
       });
     configuration.current = operation;
@@ -164,6 +199,7 @@ export function useWindowAgent() {
     stop,
     send,
     newChat,
+    restoreChat,
     changeMode,
     clearError: () => setError(''),
     busy: () => submitting.current || !!request.current,

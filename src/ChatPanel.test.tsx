@@ -140,6 +140,37 @@ describe('chat controls', () => {
     expect(screen.getByRole('textbox', { name: 'Ask the assistant' })).toBeTruthy();
     expect(screen.queryByText('Earlier answer')).toBeNull();
   });
+  it('loads a saved conversation into the active composer when a loader is provided', () => {
+    const onLoadChat = vi.fn();
+    const saved = {
+      conversationId: 'saved-conversation',
+      title: 'Earlier question',
+      updatedAt: new Date().toISOString(),
+      items: [
+        {
+          kind: 'message' as const,
+          id: 'question',
+          role: 'user' as const,
+          text: 'Earlier question',
+        },
+        {
+          kind: 'message' as const,
+          id: 'answer',
+          role: 'assistant' as const,
+          text: 'Earlier answer',
+        },
+      ],
+    };
+    localStorage.setItem('nexus.chat-history.v1', JSON.stringify([saved]));
+    mount(undefined, 1, { onLoadChat });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Chat history' }));
+    fireEvent.click(screen.getByRole('button', { name: /Earlier question/ }));
+
+    expect(onLoadChat).toHaveBeenCalledWith(saved);
+    expect(screen.getByRole('textbox', { name: 'Ask the assistant' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Back to current chat' })).toBeNull();
+  });
   it('grows the composer with multiline input up to its height limit', () => {
     mount();
     const input = screen.getByRole('textbox', { name: 'Ask the assistant' }) as HTMLTextAreaElement;

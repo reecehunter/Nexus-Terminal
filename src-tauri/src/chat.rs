@@ -42,7 +42,16 @@ pub struct ChatInput {
     #[serde(default)]
     pub reasoning_effort: ReasoningEffort,
     #[serde(default)]
+    pub history: Vec<RestoredMessage>,
+    #[serde(default)]
     pub redact_sensitive_info: Option<bool>,
+}
+
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RestoredMessage {
+    pub role: String,
+    pub content: String,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
@@ -295,6 +304,20 @@ impl ChatManager {
             }
             // Reserve history ownership before spawning, including delayed workers.
             history.current_request_id = input.request_id.clone();
+            if history.turns.is_empty() && !input.history.is_empty() {
+                let restored = input
+                    .history
+                    .iter()
+                    .filter(|message| {
+                        matches!(message.role.as_str(), "user" | "assistant")
+                            && !message.content.trim().is_empty()
+                    })
+                    .map(|message| json!({"role": message.role, "content": message.content}))
+                    .collect::<Vec<_>>();
+                if !restored.is_empty() {
+                    history.turns.push_back(restored);
+                }
+            }
         }
         *active = Some(control.clone());
         drop(active);

@@ -838,6 +838,7 @@ interface Props {
   onSend(text: string): Promise<boolean>;
   onStop(): void;
   onNewChat(): void;
+  onLoadChat?(chat: SavedChat): void;
   onClose(): void;
   onSettings(): void;
 }
@@ -971,8 +972,14 @@ export function ChatPanel(props: Props) {
               key={chat.conversationId}
               aria-pressed={selectedChat?.conversationId === chat.conversationId}
               onClick={() => {
-                setSelectedChat(chat);
-                nearBottom.current = true;
+                if (props.onLoadChat) {
+                  props.onLoadChat(chat);
+                  setSelectedChat(null);
+                  setShowHistory(false);
+                } else {
+                  setSelectedChat(chat);
+                  nearBottom.current = true;
+                }
               }}
             >
               <span>{chat.title}</span>

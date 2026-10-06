@@ -1,4 +1,4 @@
-import type { ChatEvent, ChatItem, ChatState } from './types';
+import type { ChatEvent, ChatItem, ChatState, CompletedTurn } from './types';
 
 export type ChatAction =
   | { type: 'begin'; requestId: string; sessionId: string; text: string; internal?: boolean }
@@ -6,6 +6,12 @@ export type ChatAction =
   | { type: 'stop' }
   | { type: 'pause'; label: string }
   | { type: 'reset'; conversationId: string }
+  | {
+      type: 'restore';
+      conversationId: string;
+      items: ChatItem[];
+      completedTurns?: CompletedTurn[];
+    }
   | { type: 'failure'; requestId: string; message: string };
 
 export function initialChat(conversationId: string): ChatState {
@@ -28,6 +34,12 @@ function cancelTools(items: ChatItem[]): ChatItem[] {
 
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   if (action.type === 'reset') return initialChat(action.conversationId);
+  if (action.type === 'restore')
+    return {
+      ...initialChat(action.conversationId),
+      items: action.items,
+      completedTurns: action.completedTurns,
+    };
   if (action.type === 'begin')
     return {
       ...state,

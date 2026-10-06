@@ -39,6 +39,8 @@ export interface ChatInput {
   terminalText: string | null;
   attachments: TerminalAttachment[];
   reasoningEffort: ReasoningEffort;
+  /** Text-only context used to rehydrate a locally saved conversation. */
+  history?: { role: 'user' | 'assistant'; content: string }[];
 }
 export type AgentMode = 'ask' | 'auto' | 'full';
 export const MAX_TERMINAL_ATTACHMENTS = 16;
