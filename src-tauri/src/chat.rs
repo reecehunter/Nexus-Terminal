@@ -1488,6 +1488,7 @@ mod tests {
             terminal_text: None,
             attachments: vec![],
             reasoning_effort: ReasoningEffort::Medium,
+            history: vec![],
             redact_sensitive_info: None,
         };
         let error = manager
@@ -1543,6 +1544,7 @@ mod tests {
             terminal_text: None,
             attachments: vec![],
             reasoning_effort: ReasoningEffort::Medium,
+            history: vec![],
             redact_sensitive_info: None,
         };
         manager.history.lock().unwrap().conversation_id = input.conversation_id.clone();
@@ -1577,6 +1579,7 @@ mod tests {
             terminal_text: None,
             attachments: vec![],
             reasoning_effort: ReasoningEffort::Medium,
+            history: vec![],
             redact_sensitive_info: None,
         };
         let resumed = vec![json!({"role":"user","content":"continue"})];
@@ -1619,6 +1622,7 @@ mod tests {
             terminal_text: None,
             attachments: vec![],
             reasoning_effort: ReasoningEffort::Medium,
+            history: vec![],
             redact_sensitive_info: None,
         };
         let result = manager
@@ -1805,7 +1809,7 @@ mod tests {
             }),
             ..control()
         };
-        let input = ChatInput { request_id: "request".into(), session_id: "session".into(), conversation_id: "conversation".into(), text: "Explain the directory and notes.txt, run the diagnostic command, and explain its failure.".into(), directory: Some(root.to_string_lossy().into_owned()), terminal_text: None, attachments: vec![], reasoning_effort: ReasoningEffort::Medium, redact_sensitive_info: None };
+        let input = ChatInput { request_id: "request".into(), session_id: "session".into(), conversation_id: "conversation".into(), text: "Explain the directory and notes.txt, run the diagnostic command, and explain its failure.".into(), directory: Some(root.to_string_lossy().into_owned()), terminal_text: None, attachments: vec![], reasoning_effort: ReasoningEffort::Medium, history: vec![], redact_sensitive_info: None };
         let manager = ChatManager::default();
         let answering = manager.run_turn_with_client(
             &input,

@@ -744,6 +744,7 @@ async fn mocked_api_observes_inputs_waits_and_answers_with_replayable_tool_pairs
             directory: None,
             terminal_text: None,
             attachments: vec![Attachment { session_id: pty.session.id.clone(), label: "Fixture terminal".into() }],
+            history: vec![],
             redact_sensitive_info: None,
         };
         let turning = agent.manager.run_turn_with_client(&input, None, "mock-terminal-model",
@@ -860,6 +861,7 @@ async fn mocked_api_pauses_at_task_limit_without_an_extra_request_and_compacts_c
             attachments: vec![Attachment {
                 session_id: pty.session.id.clone(), label: "Fixture terminal".into(),
             }],
+            history: vec![],
             redact_sensitive_info: None,
         };
         agent.manager.run_turn_with_client(&input, None, "mock-terminal-model",
@@ -952,6 +954,7 @@ async fn mocked_api_manual_pause_before_first_approval_preserves_question_on_res
             directory: None,
             terminal_text: None,
             attachments: vec![Attachment { session_id: pty.session.id.clone(), label: "Fixture terminal".into() }],
+            history: vec![],
             redact_sensitive_info: None,
         };
         let original_question = input.text.clone();
