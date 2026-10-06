@@ -337,17 +337,14 @@ async fn settings_save(
         );
         return Err(error.to_string());
     }
-    let view = match state
-        .settings
-        .save(
-            model,
-            api_key,
-            next,
-            accepted_effort,
-            verified,
-            redact_sensitive_info.unwrap_or(current.redact_sensitive_info),
-        )
-    {
+    let view = match state.settings.save(
+        model,
+        api_key,
+        next,
+        accepted_effort,
+        verified,
+        redact_sensitive_info.unwrap_or(current.redact_sensitive_info),
+    ) {
         Ok(view) => view,
         Err(error) => {
             let _ = menus::apply(
