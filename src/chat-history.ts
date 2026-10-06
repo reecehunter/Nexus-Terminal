@@ -38,8 +38,17 @@ export function loadChatHistory(): SavedChat[] {
 
 export function saveChatHistory(state: ChatState): void {
   if (!state.items.length) return;
+  const chat = savedChatFromState(state);
+  const history = loadChatHistory().filter(
+    (entry) => entry.conversationId !== state.conversationId,
+  );
+  // Bound local storage growth while retaining the most recent conversations.
+  localStorage.setItem(storageKey, JSON.stringify([chat, ...history].slice(0, 50)));
+}
+
+export function savedChatFromState(state: ChatState): SavedChat {
   const firstQuestion = state.items.find((item) => item.kind === 'message' && item.role === 'user');
-  const chat: SavedChat = {
+  return {
     conversationId: state.conversationId,
     title: firstQuestion?.kind === 'message' ? firstQuestion.text.slice(0, 100) : 'Conversation',
     updatedAt: new Date().toISOString(),
@@ -55,9 +64,4 @@ export function saveChatHistory(state: ChatState): void {
         : item,
     ),
   };
-  const history = loadChatHistory().filter(
-    (entry) => entry.conversationId !== state.conversationId,
-  );
-  // Bound local storage growth while retaining the most recent conversations.
-  localStorage.setItem(storageKey, JSON.stringify([chat, ...history].slice(0, 50)));
 }

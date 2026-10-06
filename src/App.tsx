@@ -18,6 +18,8 @@ import {
 import { SplitDivider } from './SplitDivider';
 import { MacroTip } from './MacroTip';
 import { defaultHotkeys, hotkeyAction, formatHotkey } from './hotkeys';
+import { loadAppState, saveAppState, type PersistedTab } from './app-state';
+import { savedChatFromState } from './chat-history';
 import type {
   ContextSnapshot,
   ModelOption,
@@ -41,6 +43,7 @@ interface Tab {
   layout: PaneLayout;
   focusedId: string;
 }
+const savedAppState = loadAppState();
 function createTab(number: number, paneNumber: number, sourceSessionId: string | null): Tab {
   const pane = { id: crypto.randomUUID(), number: paneNumber, sourceSessionId };
   return {
@@ -69,16 +72,18 @@ function macroLabel(binding: string | null | undefined): string | null {
 }
 
 export default function App() {
-  const agent = useWindowAgent();
+  const agent = useWindowAgent(savedAppState?.chat);
   const agentRef = useRef(agent);
   agentRef.current = agent;
-  const [chatWidth, setChatWidth] = useState(368);
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatWidth, setChatWidth] = useState(savedAppState?.chatWidth ?? 368);
+  const [chatOpen, setChatOpen] = useState(savedAppState?.chatOpen ?? false);
   const [chatMounted, setChatMounted] = useState(false);
   const [chatAnimation, setChatAnimation] = useState<'opening' | 'open' | 'closing'>('opening');
   const chatAnimationTimer = useRef<number | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsTabVisible, setSettingsTabVisible] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(savedAppState?.settingsOpen ?? false);
+  const [settingsTabVisible, setSettingsTabVisible] = useState(
+    savedAppState?.settingsTabVisible ?? false,
+  );
   const settingsOpenRef = useRef(settingsOpen);
   settingsOpenRef.current = settingsOpen;
   const [settings, setSettings] = useState<Settings>({ model: 'gpt-5.4-mini', hasApiKey: false });
@@ -95,8 +100,14 @@ export default function App() {
   const [localContext, setLocalContext] = useState<ContextSnapshot | null>(null);
   const [localContextLoading, setLocalContextLoading] = useState(false);
   const localContextGeneration = useRef(0);
-  const [tabs, setTabs] = useState<Tab[]>(() => [createTab(1, 1, null)]);
-  const [activeId, setActiveId] = useState(tabs[0].id);
+  const [tabs, setTabs] = useState<Tab[]>(
+    () =>
+      savedAppState?.tabs.map((tab) => ({
+        ...tab,
+        panes: tab.panes.map((pane) => ({ ...pane, sourceSessionId: null })),
+      })) ?? [createTab(1, 1, null)],
+  );
+  const [activeId, setActiveId] = useState(savedAppState?.activeId ?? tabs[0].id);
   const [confirmation, setConfirmation] = useState<CloseTarget | null>(null);
   const [tabMenu, setTabMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
   const [renameTab, setRenameTab] = useState<{ tabId: string; name: string } | null>(null);
@@ -108,14 +119,34 @@ export default function App() {
   hotkeysRef.current = hotkeys;
   const [closing, setClosing] = useState(false);
   const handles = useRef(new Map<string, WorkspaceHandle>());
-  const nextNumber = useRef(2);
-  const nextPaneNumber = useRef(2);
+  const nextNumber = useRef(Math.max(0, ...tabs.map((tab) => tab.number)) + 1);
+  const nextPaneNumber = useRef(
+    Math.max(0, ...tabs.flatMap((tab) => tab.panes.map((pane) => pane.number))) + 1,
+  );
   const dialogRef = useRef<HTMLDivElement>(null);
   const closingRef = useRef(false);
   const macroTimer = useRef<number | null>(null);
   const [macroTipsVisible, setMacroTipsVisible] = useState(false);
   const stateRef = useRef({ tabs, activeId, confirmation });
   stateRef.current = { tabs, activeId, confirmation };
+  useEffect(() => {
+    saveAppState({
+      tabs: tabs.map((tab): PersistedTab => ({
+        id: tab.id,
+        number: tab.number,
+        name: tab.name,
+        panes: tab.panes.map(({ id, number }) => ({ id, number })),
+        layout: tab.layout,
+        focusedId: tab.focusedId,
+      })),
+      activeId,
+      chatOpen,
+      chatWidth,
+      settingsOpen,
+      settingsTabVisible,
+      chat: agent.state.items.length ? savedChatFromState(agent.state) : null,
+    });
+  }, [tabs, activeId, chatOpen, chatWidth, settingsOpen, settingsTabVisible, agent.state]);
   const focusedId = tabs.find((tab) => tab.id === activeId)!.focusedId;
   const attachmentPaneIds = customAttachments ?? [focusedId];
   const attachments: TerminalAttachment[] = tabs.flatMap((tab) =>

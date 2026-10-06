@@ -5,9 +5,16 @@ import type { SavedChat } from './chat-history';
 import type { AgentMode, ChatEvent, ReasoningEffort, TerminalAttachment } from './types';
 
 // Mounted once by App: terminal panes never own a conversation or permission mode.
-export function useWindowAgent() {
-  const [state, dispatch] = useReducer(chatReducer, undefined, () =>
-    initialChat(crypto.randomUUID()),
+export function useWindowAgent(initialSavedChat?: SavedChat | null) {
+  const [state, dispatch] = useReducer(chatReducer, initialSavedChat, (saved) =>
+    saved
+      ? chatReducer(initialChat(saved.conversationId), {
+          type: 'restore',
+          conversationId: saved.conversationId,
+          items: saved.items,
+          completedTurns: saved.completedTurns,
+        })
+      : initialChat(crypto.randomUUID()),
   );
   const [mode, setMode] = useState<AgentMode>('ask');
   const [error, setError] = useState('');
@@ -19,7 +26,13 @@ export function useWindowAgent() {
   const configuration = useRef(Promise.resolve());
   const cancellation = useRef(Promise.resolve());
   const decoders = useRef(new Map<string, TextDecoder>());
-  const restoredHistory = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const restoredHistory = useRef<{ role: 'user' | 'assistant'; content: string }[]>(
+    initialSavedChat?.items.flatMap((item) =>
+      item.kind === 'message' && item.text.trim().length > 0
+        ? [{ role: item.role, content: item.text }]
+        : [],
+    ) ?? [],
+  );
 
   const stop = useCallback((reason?: string) => {
     ++generation.current;
