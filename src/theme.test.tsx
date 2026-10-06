@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { defaultTheme, parseTheme, terminalTheme, ThemeProvider } from './theme';
+import { defaultTheme, parseTheme, terminalTheme, themePresets, ThemeProvider } from './theme';
 import { ThemeEditor } from './ThemeEditor';
 
 beforeEach(() => localStorage.clear());
@@ -91,6 +91,23 @@ it('maps prompt colors to dedicated slots while preserving other extended colors
     defaultTheme.colors.promptDirectory,
     defaultTheme.colors.promptSymbol,
   ]);
+});
+it('keeps all built-in presets valid and uniquely named', () => {
+  const names = themePresets.map((preset) => preset.name);
+
+  expect(new Set(names).size).toBe(names.length);
+  expect(names).toEqual(
+    expect.arrayContaining([
+      'Dracula',
+      'Nord',
+      'Gruvbox Dark',
+      'Tokyo Night',
+      'Catppuccin Mocha',
+      'One Dark',
+      'Solarized Dark',
+    ]),
+  );
+  for (const preset of themePresets) expect(parseTheme(preset)).toEqual(preset);
 });
 it('updates the prompt palette from the appearance controls', () => {
   render(
