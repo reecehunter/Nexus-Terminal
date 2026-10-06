@@ -307,6 +307,17 @@ export default function App() {
       disposed = true;
     };
   }, [settings]);
+  function openChat() {
+    // Opening the assistant always starts with the currently focused terminal.
+    // This also recovers from an explicit selection that was emptied earlier.
+    if (customAttachmentsRef.current !== null) {
+      void agent.stop();
+      customAttachmentsRef.current = null;
+      setCustomAttachments(null);
+    }
+    setChatOpen(true);
+  }
+
   function closeChat() {
     setChatOpen(false);
     handles.current.get(focusedPaneId())?.focus();
@@ -523,7 +534,7 @@ export default function App() {
     else if (action === 'close-tab') void close({ tabId: activeId });
     else if (action === 'toggle-assistant') {
       if (chatOpen) closeChat();
-      else setChatOpen(true);
+      else openChat();
     } else if (action === 'open-settings') openSettings();
     else if (action === 'previous-tab' || action === 'next-tab') {
       const index = tabs.findIndex((tab) => tab.id === activeId);
@@ -776,7 +787,7 @@ export default function App() {
           aria-label="Toggle AI chat"
           onClick={() => {
             if (chatOpen) closeChat();
-            else setChatOpen(true);
+            else openChat();
           }}
         >
           <Sparkles size={16} />

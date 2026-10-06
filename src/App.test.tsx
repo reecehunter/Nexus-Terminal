@@ -133,6 +133,22 @@ describe('desktop chat integration', () => {
     }
   });
 
+  it('reattaches the focused terminal whenever the assistant is opened', async () => {
+    await openChat();
+    fireEvent.click(screen.getByRole('button', { name: /Select terminals/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'T1S1' }));
+    expect(screen.getByText('ATTACHED TERMINALS')).toBeTruthy();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('complementary', { name: 'AI chat' })).toBeNull());
+
+    shortcut('j');
+    await waitFor(() => expect(screen.getByText('FOLLOWING FOCUSED TERMINAL')).toBeTruthy());
+    expect((screen.getByRole('checkbox', { name: 'T1S1' }) as HTMLInputElement).checked).toBe(
+      true,
+    );
+  });
+
   async function submit(text = 'Inspect the attached terminal') {
     const input = screen.getByRole('textbox', { name: 'Ask the assistant' });
     fireEvent.change(input, { target: { value: text } });
