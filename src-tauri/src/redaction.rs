@@ -77,12 +77,22 @@ impl Redactor {
                 *text = redacted;
                 changed
             }
-            Value::Array(values) => values
-                .iter_mut()
-                .fold(false, |changed, value| self.redact_value(value) || changed),
-            Value::Object(values) => values
-                .values_mut()
-                .fold(false, |changed, value| self.redact_value(value) || changed),
+            Value::Array(values) => {
+                let mut changed = false;
+                for value in values {
+                    // Visit every element so nested values are redacted even after a prior change.
+                    changed |= self.redact_value(value);
+                }
+                changed
+            }
+            Value::Object(values) => {
+                let mut changed = false;
+                for value in values.values_mut() {
+                    // Visit every value so nested fields are redacted even after a prior change.
+                    changed |= self.redact_value(value);
+                }
+                changed
+            }
             Value::Null | Value::Bool(_) | Value::Number(_) => false,
         }
     }
