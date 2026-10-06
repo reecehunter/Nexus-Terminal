@@ -818,6 +818,7 @@ export default function App() {
               closing={closing}
               hotkeys={hotkeys}
               showStatusBar={settings.showStatusBar ?? true}
+              spoofSshUserHost={settings.spoofSshUserHost}
               onSessionChange={onSessionChange}
               onManualInput={onManualInput}
               focusOnReady={!chatOpen && !settingsOpen && !confirmation}
@@ -1075,6 +1076,7 @@ interface SplitTabProps {
   handles: Map<string, WorkspaceHandle>;
   hotkeys: import('./hotkeys').Hotkeys;
   showStatusBar: boolean;
+  spoofSshUserHost?: string;
   onSessionChange(paneId: string, session: TerminalInfo | null): void;
   onManualInput(sessionId: string, reason: 'typed' | 'interrupt'): void | Promise<void>;
   focusOnReady: boolean;
@@ -1093,6 +1095,7 @@ function SplitTab({
   onResize,
   hotkeys,
   showStatusBar,
+  spoofSshUserHost,
   onSessionChange,
   onManualInput,
   focusOnReady,
@@ -1139,6 +1142,7 @@ function SplitTab({
               closing={closing}
               hotkeys={hotkeys}
               showStatusBar={showStatusBar}
+              spoofSshUserHost={spoofSshUserHost}
               onSessionChange={onSessionChange}
               onManualInput={onManualInput}
               focusOnReady={focusOnReady}

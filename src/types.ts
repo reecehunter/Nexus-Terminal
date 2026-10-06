@@ -20,6 +20,7 @@ export interface Settings {
   model: string;
   hasApiKey: boolean;
   spoofUserHost?: string;
+  spoofSshUserHost?: string;
   showStatusBar?: boolean;
   hotkeys?: import('./hotkeys').Hotkeys;
   reasoningEffort?: ReasoningEffort;

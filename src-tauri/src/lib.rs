@@ -295,6 +295,7 @@ async fn settings_save(
     redact_sensitive_info: Option<bool>,
     show_status_bar: Option<bool>,
     spoof_user_host: Option<String>,
+    spoof_ssh_user_host: Option<String>,
     window: WebviewWindow,
     state: State<'_, AppState>,
 ) -> Result<settings::SettingsView, String> {
@@ -353,6 +354,7 @@ async fn settings_save(
         redact_sensitive_info.unwrap_or(current.redact_sensitive_info),
         show_status_bar.unwrap_or(current.show_status_bar),
         spoof_user_host,
+        spoof_ssh_user_host,
     ) {
         Ok(view) => view,
         Err(error) => {

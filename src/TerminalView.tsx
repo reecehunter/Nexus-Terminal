@@ -3,6 +3,7 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { RotateCcw, TerminalSquare } from 'lucide-react';
 import { terminalSnapshot } from './terminal-snapshot';
+import { maskUserHostOutput } from './terminal-output';
 import { bridge, desktopAvailable, errorMessage } from './bridge';
 import { boundedTerminalText } from './chat-state';
 import type { TerminalInfo } from './types';
@@ -23,10 +24,20 @@ interface Props {
   onSession(session: TerminalInfo | null): void;
   onError(message: string): void;
   onManualInput(sessionId: string, reason: 'typed' | 'interrupt'): void | Promise<void>;
+  spoofSshUserHost?: string;
 }
 
 export const TerminalView = forwardRef<TerminalHandle, Props>(function TerminalView(
-  { onSession, onError, onManualInput, tabId, sourceSessionId, active, focusOnReady },
+  {
+    onSession,
+    onError,
+    onManualInput,
+    tabId,
+    sourceSessionId,
+    active,
+    focusOnReady,
+    spoofSshUserHost,
+  },
   ref,
 ) {
   const { theme } = useTheme();
@@ -43,6 +54,8 @@ export const TerminalView = forwardRef<TerminalHandle, Props>(function TerminalV
   const [exited, setExited] = useState<number | null>(null);
   const callbacks = useRef({ onSession, onError, onManualInput });
   callbacks.current = { onSession, onError, onManualInput };
+  const spoofSshUserHostRef = useRef(spoofSshUserHost ?? null);
+  spoofSshUserHostRef.current = spoofSshUserHost ?? null;
 
   useEffect(() => {
     const terminal = terminalRef.current;
@@ -183,7 +196,12 @@ export const TerminalView = forwardRef<TerminalHandle, Props>(function TerminalV
         if (disposed) return;
         if (sessionId && event.sessionId !== sessionId) return;
         if (event.type === 'output') {
-          terminal.write(new Uint8Array(event.data), () => {
+          const output = new TextDecoder().decode(new Uint8Array(event.data));
+          const maskedOutput = maskUserHostOutput(output, spoofSshUserHostRef.current, {
+            user: themeRef.current.colors.promptUser,
+            host: themeRef.current.colors.promptHost,
+          });
+          terminal.write(maskedOutput, () => {
             if (disposed) return;
             parsedSequence = event.sequence;
             parsedRevision = Math.max(parsedRevision, event.revision);

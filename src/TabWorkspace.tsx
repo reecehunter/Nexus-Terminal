@@ -22,6 +22,7 @@ interface Props {
   closing: boolean;
   hotkeys: Hotkeys;
   showStatusBar: boolean;
+  spoofSshUserHost?: string;
   onClosePane(): void;
   onSessionChange(paneId: string, session: TerminalInfo | null): void;
   onManualInput(sessionId: string, reason: 'typed' | 'interrupt'): void | Promise<void>;
@@ -38,6 +39,7 @@ export const TabWorkspace = forwardRef<WorkspaceHandle, Props>(function TabWorks
     closing,
     hotkeys,
     showStatusBar,
+    spoofSshUserHost,
     onClosePane,
     onSessionChange,
     onManualInput,
@@ -92,6 +94,7 @@ export const TabWorkspace = forwardRef<WorkspaceHandle, Props>(function TabWorks
           onSession={onSession}
           onError={setError}
           onManualInput={onManualInput}
+          spoofSshUserHost={spoofSshUserHost}
         />
       </main>
       {error && (

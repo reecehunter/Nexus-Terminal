@@ -58,6 +58,8 @@ struct Settings {
     show_status_bar: bool,
     #[serde(default)]
     spoof_user_host: Option<String>,
+    #[serde(default)]
+    spoof_ssh_user_host: Option<String>,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -70,6 +72,7 @@ impl Default for Settings {
             redact_sensitive_info: true,
             show_status_bar: true,
             spoof_user_host: None,
+            spoof_ssh_user_host: None,
         }
     }
 }
@@ -85,6 +88,7 @@ pub struct SettingsView {
     pub redact_sensitive_info: bool,
     pub show_status_bar: bool,
     pub spoof_user_host: Option<String>,
+    pub spoof_ssh_user_host: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -159,6 +163,7 @@ impl SettingsStore {
             show_status_bar: settings.show_status_bar,
 
             spoof_user_host: settings.spoof_user_host,
+            spoof_ssh_user_host: settings.spoof_ssh_user_host,
 
             has_api_key: keychain_read()?.is_some(),
         })
@@ -190,6 +195,7 @@ impl SettingsStore {
         redact_sensitive_info: bool,
         show_status_bar: bool,
         spoof_user_host: Option<String>,
+        spoof_ssh_user_host: Option<String>,
     ) -> Result<SettingsView> {
         let _guard = self
             .lock
@@ -201,6 +207,7 @@ impl SettingsStore {
             bail!("Enter a valid model ID");
         }
         let spoof_user_host = validate_spoof_user_host(spoof_user_host)?;
+        let spoof_ssh_user_host = validate_spoof_user_host(spoof_ssh_user_host)?;
         if let Some(api_key) = api_key.filter(|key| !key.trim().is_empty()) {
             if api_key.len() > 1024 || api_key.chars().any(char::is_whitespace) {
                 bail!("API key must not contain whitespace");
@@ -220,6 +227,7 @@ impl SettingsStore {
                 redact_sensitive_info,
                 show_status_bar,
                 spoof_user_host: spoof_user_host.clone(),
+                spoof_ssh_user_host: spoof_ssh_user_host.clone(),
             })?,
         )?;
         fs::rename(temporary, self.directory.join("settings.json"))?;
@@ -231,6 +239,7 @@ impl SettingsStore {
             redact_sensitive_info,
             show_status_bar,
             spoof_user_host,
+            spoof_ssh_user_host,
 
             has_api_key: keychain_read()?.is_some(),
         })
@@ -286,6 +295,7 @@ impl SettingsStore {
             show_status_bar: settings.show_status_bar,
 
             spoof_user_host: settings.spoof_user_host,
+            spoof_ssh_user_host: settings.spoof_ssh_user_host,
 
             has_api_key: keychain_read()?.is_some(),
         })
@@ -307,6 +317,7 @@ impl SettingsStore {
             show_status_bar: settings.show_status_bar,
 
             spoof_user_host: settings.spoof_user_host,
+            spoof_ssh_user_host: settings.spoof_ssh_user_host,
 
             has_api_key: false,
         })

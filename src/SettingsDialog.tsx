@@ -33,6 +33,7 @@ export function SettingsDialog({
   );
   const [showStatusBar, setShowStatusBar] = useState(settings.showStatusBar ?? true);
   const [spoofUserHost, setSpoofUserHost] = useState(settings.spoofUserHost ?? '');
+  const [spoofSshUserHost, setSpoofSshUserHost] = useState(settings.spoofSshUserHost ?? '');
   const [models, setModels] = useState<ModelOption[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -81,6 +82,7 @@ export function SettingsDialog({
         redactSensitiveInfo,
         showStatusBar,
         spoofUserHost.trim() || null,
+        spoofSshUserHost.trim() || null,
       );
       onSave(next);
       setApiKey('');
@@ -92,7 +94,8 @@ export function SettingsDialog({
         effort !== (settings.reasoningEffort ?? 'medium') ||
         redactSensitiveInfo !== (settings.redactSensitiveInfo ?? true) ||
         showStatusBar !== (settings.showStatusBar ?? true) ||
-        spoofUserHost.trim() !== (settings.spoofUserHost ?? '')
+        spoofUserHost.trim() !== (settings.spoofUserHost ?? '') ||
+        spoofSshUserHost.trim() !== (settings.spoofSshUserHost ?? '')
       ) {
         setConnected(true);
       } else onClose();
@@ -321,6 +324,24 @@ export function SettingsDialog({
         <p className="field-help">
           Shows a safe, literal identity in new terminal prompts. Use letters, numbers, dots,
           underscores, or hyphens on each side of @.
+        </p>
+        <label htmlFor="spoof-ssh-user-host">Spoof SSH user@host</label>
+        <input
+          id="spoof-ssh-user-host"
+          type="text"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Leave blank to use the remote identity"
+          value={spoofSshUserHost}
+          disabled={saving}
+          onChange={(event) => {
+            setSpoofSshUserHost(event.target.value);
+            setConnected(false);
+          }}
+        />
+        <p className="field-help">
+          Masks visible user@host text in the terminal for recordings. This is client-side only; it
+          does not change the remote shell.
         </p>
         <ThemeEditor />
         <section className="hotkey-settings" aria-label="Keyboard shortcuts">
