@@ -286,6 +286,8 @@ async fn model_save(
 }
 
 #[tauri::command]
+// The individual parameters are the stable IPC contract used by the frontend settings form.
+#[allow(clippy::too_many_arguments)]
 async fn settings_save(
     model: String,
     api_key: Option<String>,

@@ -185,6 +185,9 @@ impl SettingsStore {
         Ok(self.load()?.spoof_user_host)
     }
 
+    // Settings are kept as separate values here to match the persisted settings schema and
+    // the frontend's settings form. This is an intentional aggregate operation.
+    #[allow(clippy::too_many_arguments)]
     pub fn save(
         &self,
         model: String,
