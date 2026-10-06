@@ -560,6 +560,38 @@ function pointer(target: Element | Window, type: string, clientX = 0, clientY = 
 }
 
 describe('split sessions', () => {
+  it('keeps a pending approval when Cmd+D opens a pane', async () => {
+    await openChat();
+    const input = screen.getByRole('textbox', { name: 'Ask the assistant' });
+    fireEvent.change(input, { target: { value: 'Run the proposed command' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(bridge.startChat).toHaveBeenCalledOnce());
+    const [request, receive] = vi.mocked(bridge.startChat).mock.calls[0] as [
+      ChatInput,
+      (event: ChatEvent) => void,
+    ];
+    act(() =>
+      receive({
+        ...request,
+        type: 'tool',
+        toolId: 'approval',
+        name: 'execute_terminal',
+        arguments: { command: 'pwd', purpose: 'Inspect the current directory' },
+        status: 'approval',
+        approvalId: 'approve',
+        directory: null,
+        result: null,
+      }),
+    );
+
+    shortcut('d');
+
+    expect(screen.getAllByRole('region', { name: /Session/ })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Approve & run' })).toBeTruthy();
+    expect(bridge.cancelChat).not.toHaveBeenCalledWith(request.requestId);
+    expect(pane(1).getAttribute('data-focused')).toBe('true');
+  });
+
   it('hides the workspace outline when a tab has only one pane', () => {
     render(<App />);
     expect(pane(1).classList.contains('single-pane')).toBe(true);

@@ -411,6 +411,10 @@ export default function App() {
   function split(direction: SplitDirection) {
     if (stateRef.current.confirmation || closingRef.current || dialogOpen() || settingsOpen) return;
     const paneId = focusedPaneId();
+    // Keep the request's attached terminal focused while creating a pane. A new
+    // pane starts without a session, so following focus would briefly produce an
+    // empty attachment list and cancel an in-flight approval.
+    const keepFocusedPane = agent.busy();
     const pane = {
       id: crypto.randomUUID(),
       number: nextPaneNumber.current++,
@@ -424,7 +428,7 @@ export default function App() {
               ...tab,
               panes: [...tab.panes, pane],
               layout: splitPane(tab.layout, paneId, pane.id, direction, splitId),
-              focusedId: pane.id,
+              focusedId: keepFocusedPane ? paneId : pane.id,
             }
           : tab,
       ),
