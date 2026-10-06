@@ -197,10 +197,6 @@ pub struct TerminalSession {
 }
 
 impl TerminalSession {
-    pub fn start(output: Channel<TerminalEvent>, directory: Option<PathBuf>) -> Result<Arc<Self>> {
-        Self::start_with_prompt_identity(output, directory, None)
-    }
-
     pub fn start_with_prompt_identity(
         output: Channel<TerminalEvent>,
         directory: Option<PathBuf>,
@@ -217,6 +213,7 @@ impl TerminalSession {
         )
     }
 
+    #[cfg(test)]
     pub(crate) fn start_at(
         output: Channel<TerminalEvent>,
         home: PathBuf,
