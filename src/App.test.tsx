@@ -862,6 +862,22 @@ it('includes the persistent Settings tab in numbered tab shortcuts', () => {
   expect(settingsTab.getAttribute('aria-selected')).toBe('true');
 });
 
+it('preserves the settings scroll position when switching tabs', () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+
+  const settingsPanel = screen.getByRole('tabpanel', { name: 'Settings' });
+  settingsPanel.scrollTop = 480;
+  const settingsTab = screen.getByRole('tab', { name: 'Settings' });
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Terminal 1' }));
+  expect(settingsPanel.hasAttribute('hidden')).toBe(true);
+  fireEvent.click(settingsTab);
+
+  expect(settingsPanel.hasAttribute('hidden')).toBe(false);
+  expect(settingsPanel.scrollTop).toBe(480);
+});
+
 it('suppresses browser context menus across the document while retaining the tab menu', () => {
   const { unmount } = render(<App />);
   for (const target of [document.body, screen.getByLabelText('Mock terminal')]) {

@@ -895,12 +895,13 @@ export default function App() {
             />
           </div>
         )}
-        {settingsOpen && (
+        {settingsTabVisible && (
           <div
             className="settings-panel"
             role="tabpanel"
             id="settings-panel"
             aria-labelledby={SETTINGS_TAB_ID}
+            hidden={!settingsOpen}
           >
             <SettingsDialog
               settings={settings}
