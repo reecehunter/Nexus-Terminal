@@ -19,6 +19,7 @@ interface MockSession {
   input: string;
   sequence: number;
   revision: number;
+  skipLineFeed: boolean;
 }
 
 const encoder = new TextEncoder();
@@ -71,6 +72,11 @@ export function createMockBackend(): Backend {
       ['help', 'Available commands: clear, help, ls, pwd, whoami\r\n'],
     ]);
     emit(session, '\r\n');
+    // A blank Enter should only create a fresh prompt, like zsh does.
+    if (!trimmed) {
+      prompt(session);
+      return;
+    }
     emit(session, output.get(trimmed) ?? `zsh: command not found: ${trimmed}\r\n`);
     prompt(session);
   }
@@ -83,7 +89,14 @@ export function createMockBackend(): Backend {
         home: '/Users/demo',
         shell: '/bin/zsh (mock preview)',
       };
-      const session: MockSession = { info, onEvent, input: '', sequence: 0, revision: 0 };
+      const session: MockSession = {
+        info,
+        onEvent,
+        input: '',
+        sequence: 0,
+        revision: 0,
+        skipLineFeed: false,
+      };
       sessions.set(info.sessionId, session);
       await Promise.resolve();
       emit(session, 'Nexus browser preview\r\n');
@@ -95,12 +108,22 @@ export function createMockBackend(): Backend {
       if (!session) return;
       if (data.includes('\u0003')) {
         session.input = '';
+        session.skipLineFeed = false;
         emit(session, '^C\r\n');
         prompt(session);
         return;
       }
       for (const character of data) {
-        if (character === '\r' || character === '\n') {
+        if (character === '\r') {
+          runCommand(session, session.input);
+          session.input = '';
+          session.skipLineFeed = true;
+        } else if (character === '\n') {
+          // Terminals may report Enter as CRLF; do not execute that line twice.
+          if (session.skipLineFeed) {
+            session.skipLineFeed = false;
+            continue;
+          }
           runCommand(session, session.input);
           session.input = '';
         } else if (character === '\u007f') {

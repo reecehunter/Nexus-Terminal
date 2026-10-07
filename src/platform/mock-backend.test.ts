@@ -33,4 +33,18 @@ describe('mock backend', () => {
     expect(events.some((event) => event.type === 'exit')).toBe(true);
     await expect(backend.terminalRevision(session.sessionId)).resolves.toBe(0);
   });
+
+  it('keeps an empty Enter as a prompt-only action', async () => {
+    const backend = createMockBackend();
+    const events: { type: string; data?: number[] }[] = [];
+    const session = await backend.startTerminal('tab', null, (event) => events.push(event));
+
+    await backend.writeTerminal(session.sessionId, '\r\n');
+
+    const output = events
+      .filter((event) => event.type === 'output')
+      .map((event) => outputText(event.data ?? []))
+      .join('');
+    expect(output).not.toContain('command not found:');
+  });
 });
