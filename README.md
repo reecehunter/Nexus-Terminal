@@ -125,9 +125,13 @@ For signed and notarized releases, run `npm run app:release` using the credentia
 
 ## Architecture & Structure
 
-Nexus uses React and xterm.js for the interface, with Tauri and Rust handling native terminal sessions and the agent tool loop.
+Nexus is split into a desktop frontend and a native backend. React and xterm.js
+render the application and terminal UI; the frontend communicates with the
+native runtime only through the typed `Backend` contract in `src/backend.ts`.
+The current Tauri adapter is isolated in `src/platform/tauri-backend.ts`, while
+Rust owns real PTY sessions and the agent tool loop.
 
-- **`src/`**: React UI, xterm.js integration, typed IPC bridge, window-level agent, and request-scoped chat state.
+- **`src/`**: React UI, xterm.js integration, runtime-neutral backend contract, Tauri adapter, window-level agent, and request-scoped chat state.
 - **`src-tauri/src/terminal.rs`**: PTY lifecycle, flow control, and native macOS directory tracking.
 - **`src-tauri/src/chat.rs` & `permissions.rs`**: OpenAI terminal tool loop, in-memory history, conservative permission policy, and single-use approvals.
 - **`src-tauri/src/context.rs` & `runner.rs`**: Scoped reads, task processes, SSE decoding, and Keychain/settings access.
