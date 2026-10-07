@@ -1,4 +1,4 @@
-import { createTauriBackend } from './platform/tauri-backend';
+import { createBackend } from './platform/create-backend';
 import type { Backend } from './backend';
 
 /**
@@ -6,7 +6,7 @@ import type { Backend } from './backend';
  * A future local-socket or remote-terminal adapter can replace this factory
  * without changing the React application.
  */
-export const bridge: Backend = createTauriBackend();
+export const bridge: Backend = createBackend();
 export const desktopAvailable = () => bridge.available;
 
 export function errorMessage(error: unknown): string {
