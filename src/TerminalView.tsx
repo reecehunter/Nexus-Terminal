@@ -92,6 +92,11 @@ export const TerminalView = forwardRef<TerminalHandle, Props>(function TerminalV
     let sessionId: string | null = null;
     let inputQueue = Promise.resolve();
     let publishQueue = Promise.resolve();
+    // ResizeObserver can fire repeatedly while the assistant slides in or out.
+    // Serialize backend resizes so each snapshot is based on the latest PTY
+    // dimensions instead of racing another resize's revision update.
+    let resizeQueue = Promise.resolve();
+    let latestResize = 0;
     let parsedSequence = 0;
     let parsedRevision = 0;
     const pendingFlushes = new Set<(error: Error) => void>();
@@ -155,11 +160,27 @@ export const TerminalView = forwardRef<TerminalHandle, Props>(function TerminalV
       if (disposed || !container.current?.clientWidth || !container.current.clientHeight) return;
       try {
         fit.fit();
-        if (sessionId)
-          void bridge
-            .resizeTerminal(sessionId, terminal.cols, terminal.rows)
-            .then(() => (parsedSequence ? refreshSnapshot() : undefined))
-            .catch((error) => callbacks.current.onError(errorMessage(error)));
+        if (sessionId) {
+          const resizeId = ++latestResize;
+          const id = sessionId;
+          const columns = terminal.cols;
+          const rows = terminal.rows;
+          resizeQueue = resizeQueue
+            .catch(() => {})
+            .then(async () => {
+              if (disposed || resizeId !== latestResize || sessionId !== id) return;
+              await bridge.resizeTerminal(id, columns, rows);
+              if (disposed || resizeId !== latestResize || !parsedSequence) return;
+              // Snapshot refresh is best-effort background maintenance. The
+              // explicit assistant observation path still reports its errors.
+              await refreshSnapshot().catch(() => {});
+            })
+            .catch((error) => {
+              if (!disposed && resizeId === latestResize) {
+                callbacks.current.onError(errorMessage(error));
+              }
+            });
+        }
       } catch (error) {
         callbacks.current.onError(errorMessage(error));
       }
