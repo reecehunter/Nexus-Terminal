@@ -764,7 +764,11 @@ async fn mocked_api_observes_inputs_waits_and_answers_with_replayable_tool_pairs
             assert_eq!(request["stream"], true);
             assert_eq!(request["parallel_tool_calls"], false);
             let tools = request["tools"].as_array().unwrap();
-            assert_eq!(tools.len(), 3, "terminal-only request must expose terminal tools");
+            assert_eq!(tools.len(), if step == 3 { 0 } else { 3 },
+                "verified completion must request a final response without terminal tools");
+            if step == 3 {
+                continue;
+            }
             for name in ["terminal_snapshot", "terminal_input", "terminal_wait"] {
                 let tool = tools.iter().find(|tool| tool["name"] == name).unwrap();
                 assert_eq!(tool["type"], "function");
